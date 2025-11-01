@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard - NeuraQuiz{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="dashboard-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h1 class="display-6 fw-bold mb-2">Welcome, {{ user.username }}! 🎓</h1>
+                        <p class="text-muted mb-0">Ready to test your knowledge? Choose a quiz and start learning!</p>
+                    </div>
+                    <div class="stats-summary-compact">
+                        <div class="stat-compact">
+                            <span class="stat-number-compact">{{ my_attempts.count }}</span>
+                            <span class="stat-label-compact">Quizzes Taken</span>
+                        </div>
+                        <div class="stat-compact">
+                            <span class="stat-number-compact">{{ completed_count|default:0 }}</span>
+                            <span class="stat-label-compact">Completed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Quizzes Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="section-header mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <h2 class="fw-bold mb-0">
+                        <i class="fas fa-graduation-cap me-2 text-primary"></i>Available Quizzes
+                    </h2>
+                    <div class="access-code-form">
+                        {% if access_code %}
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success fs-6 py-2 px-3">
+                                <i class="fas fa-check-circle me-2"></i>Code: <strong>{{ access_code }}</strong>
+                            </span>
+                            <form method="post" action="{% url 'quiz:clear_access_code' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-times me-1"></i>Clear
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <form method="post" action="{% url 'quiz:verify_access_code' %}" class="d-flex gap-2">
+                            {% csrf_token %}
+                            <input type="text" name="access_code" class="form-control" placeholder="Code" maxlength="6" pattern="\d{6}" required style="width: 150px;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-key me-1"></i>Verify
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if available_quizzes %}
+                <div class="row g-4">
+                    {% for quiz in available_quizzes %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="quiz-card">
+                            <div class="quiz-header">
+                                <h5 class="quiz-title">{{ quiz.title }}</h5>
+                                <div class="quiz-badges">
+                                    {% if quiz.is_ai_generated %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-robot me-1"></i>AI
+                                        </span>
+                                    {% endif %}
+                                    {% if quiz.difficulty|lower == 'easy' %}
+                                        <span class="badge badge-difficulty-easy">{{ quiz.difficulty|title }}</span>
+                                    {% elif quiz.difficulty|lower == 'medium' %}
+                                        <span class="badge badge-difficulty-medium">{{ quiz.difficulty|title }}</span>
+                                    {% elif quiz.difficulty|lower == 'hard' %}
+                                        <span class="badge badge-difficulty-hard">{{ quiz.difficulty|title }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ quiz.difficulty|title }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="quiz-body">
+                                <p class="quiz-description">{{ quiz.description|truncatewords:15 }}</p>
+                                
+                                <div class="quiz-meta">
+                                    <div class="meta-item">
+                                        <i class="fas fa-tag"></i>
+                                        <span>{{ quiz.topic }}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-clock"></i>
+                                        <span>{{ quiz.time_limit }} min</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-question-circle"></i>
+                                        <span>{{ quiz.total_questions }} questions</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="quiz-actions">
+                                    <a href="{% url 'quiz:take_quiz' quiz.id %}" class="btn btn-primary w-100">
+                                        <i class="fas fa-play me-2"></i>Start Quiz
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox" style="font-size: 5rem;"></i>
+                    <h4 class="mt-4 mb-2">{% if access_code %}No quizzes available{% else %}Enter Access Code{% endif %}</h4>
+                    <p class="text-muted mb-0">{% if access_code %}Check back later for new quizzes from your instructor{% else %}Please enter your instructor's 6-digit access code to view available quizzes{% endif %}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- My Attempts Section -->
+    {% if my_attempts %}
+    <div class="row">
+        <div class="col-12">
+            <div class="section-header mb-4">
+                <h2 class="fw-bold">
+                    <i class="fas fa-history me-2 text-primary"></i>My Quiz History
+                </h2>
+            </div>
+            
+            <div class="card border-0 shadow-md">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Quiz</th>
+                                <th>Score</th>
+                                <th>Time Taken</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attempt in my_attempts %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="quiz-icon-small me-3">
+                                            {% if attempt.quiz.is_ai_generated %}
+                                                <i class="fas fa-robot text-primary"></i>
+                                            {% else %}
+                                                <i class="fas fa-book text-info"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ attempt.quiz.title }}</div>
+                                            <small class="text-muted">{{ attempt.quiz.topic }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if attempt.is_completed %}
+                                        <span class="badge {% if attempt.score >= 80 %}bg-success{% elif attempt.score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ attempt.score|floatformat:1 }}%
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if attempt.time_taken %}
+                                        {% widthratio attempt.time_taken 60 1 as minutes %}
+                                        {% widthratio attempt.time_taken 60 60 as seconds_remainder %}
+                                        {{ minutes }}:{% if seconds_remainder|length == 1 %}0{% endif %}{{ seconds_remainder }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ attempt.started_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if attempt.is_completed %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Completed
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock me-1"></i>In Progress
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        {% if attempt.is_completed %}
+                                            <a href="{% url 'quiz:quiz_results' attempt.id %}" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-chart-line me-1"></i>Results
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'quiz:take_quiz' attempt.quiz.id %}" class="btn btn-outline-warning btn-sm">
+                                                <i class="fas fa-play me-1"></i>Continue
+                                            </a>
+                                        {% endif %}
+                                        <button class="btn btn-outline-danger btn-sm" type="button" onclick="showDeleteAttemptModal('{{ attempt.id }}', '{{ attempt.quiz.title }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Attempt Confirmation Modal -->
+<div class="modal fade" id="deleteAttemptModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-strong">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-trash-alt me-2 text-danger"></i>Delete Attempt
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to delete your attempt for "<span id="delete-attempt-quiz-title"></span>"? This action cannot be undone.</p>
+                <div class="alert alert-danger mb-0">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    This will remove your attempt and its results permanently.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteAttemptForm" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteAttemptBtn">
+                        <i class="fas fa-trash-alt me-2"></i>Delete Attempt
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-header {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.stats-summary-compact {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stat-compact {
+    text-align: center;
+}
+
+.stat-number-compact {
+    display: block;
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+}
+
+.stat-label-compact {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+}
+
+.quiz-icon-small {
+    width: 48px;
+    height: 48px;
+    background: var(--gray-50);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.access-code-form input {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-align: center;
+}
+
+.access-code-form .badge {
+    letter-spacing: 0.1em;
+    box-shadow: 0 2px 8px rgba(25, 135, 84, 0.3);
+}
+
+@media (max-width: 768px) {
+    .stats-summary-compact {
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .stat-number-compact {
+        font-size: 1.5rem;
+    }
+    
+    .section-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .access-code-form {
+        width: 100%;
+    }
+    
+    .access-code-form form {
+        width: 100%;
+    }
+    
+    .access-code-form input {
+        width: 100% !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showDeleteAttemptModal(attemptId, quizTitle) {
+    // Populate modal
+    document.getElementById('delete-attempt-quiz-title').textContent = quizTitle;
+    const form = document.getElementById('deleteAttemptForm');
+    form.action = '/delete-attempt/' + attemptId + '/';
+
+    // Reset button state
+    const btn = document.getElementById('confirmDeleteAttemptBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-trash-alt me-2"></i>Delete Attempt';
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteAttemptModal'));
+    modal.show();
+
+    // Handle submit spinner
+    form.addEventListener('submit', function(e) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Deleting...';
+    }, { once: true });
+}
+</script>
+{% endblock %}

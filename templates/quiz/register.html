@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - NeuraQuiz{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="auth-card card border-0 shadow-strong">
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <div class="auth-icon mb-4">
+                            <i class="fas fa-brain text-gradient"></i>
+                        </div>
+                        <h2 class="fw-bold mb-2">Join NeuraQuiz</h2>
+                        <p class="text-muted">Create your account and start your AI-powered learning journey</p>
+                    </div>
+                    
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="username" name="username" placeholder="Choose username" required autofocus>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="your@email.com" required>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">I am a...</label>
+                                <div class="role-selection d-flex gap-3">
+                                    <div class="role-option flex-fill">
+                                        <input class="form-check-input d-none" type="radio" name="role" id="student" value="student" checked>
+                                        <label class="role-label" for="student">
+                                            <div class="role-icon">
+                                                <i class="fas fa-graduation-cap"></i>
+                                            </div>
+                                            <span class="role-title">Student</span>
+                                            <p class="role-desc">Learn and take quizzes</p>
+                                        </label>
+                                    </div>
+
+                                    <div class="role-option flex-fill">
+                                        <input class="form-check-input d-none" type="radio" name="role" id="instructor" value="instructor">
+                                        <label class="role-label" for="instructor">
+                                            <div class="role-icon">
+                                                <i class="fas fa-chalkboard-teacher"></i>
+                                            </div>
+                                            <span class="role-title">Instructor</span>
+                                            <p class="role-desc">Create and manage quizzes</p>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="password" name="password" placeholder="Create a strong password" required>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary w-100 py-3">
+                                    <i class="fas fa-user-plus me-2"></i>Create Account
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-muted mb-0">
+                            Already have an account? 
+                            <a href="{% url 'quiz:login' %}" class="text-primary fw-bold text-decoration-none">
+                                Sign in here
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-card {
+    border-radius: 24px;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.auth-icon i {
+    font-size: 4rem;
+}
+
+.role-selection {
+    margin-top: 0.5rem;
+}
+
+.role-option {
+    position: relative;
+}
+
+.role-label {
+    display: block;
+    padding: 1.5rem;
+    border: 2px solid var(--gray-200);
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.role-label:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(79, 70, 229, 0.2);
+}
+
+.role-option input:checked + .role-label {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+    box-shadow: 0 10px 30px rgba(79, 70, 229, 0.2);
+}
+
+.role-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1rem;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.75rem;
+}
+
+.role-title {
+    display: block;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 0.25rem;
+}
+
+.role-desc {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+.input-group-text {
+    width: 50px;
+    justify-content: center;
+}
+</style>
+{% endblock %}

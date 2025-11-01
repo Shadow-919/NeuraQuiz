@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Quiz - NeuraQuiz{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-strong">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h2 class="card-title mb-0 d-flex align-items-center">
+                        <i class="fas fa-plus-circle me-3"></i>
+                        <span>Create New Quiz</span>
+                    </h2>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row g-4">
+                            <div class="col-md-8">
+                                <label for="title" class="form-label">Quiz Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" placeholder="Enter an engaging quiz title" required>
+                                <div class="invalid-feedback">
+                                    Please provide a quiz title.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="difficulty" class="form-label">Difficulty Level *</label>
+                                    <div class="position-relative">
+                                        <select class="form-select difficulty-select" id="difficulty" name="difficulty" required style="cursor:pointer;">
+                                            <option value="" selected>Choose...</option>
+                                            <option value="easy">Easy</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="hard">Hard</option>
+                                        </select>
+                                        <span class="fa fa-chevron-down position-absolute end-0 top-50 translate-middle-y pe-3 text-muted pointer-events-none"></span>
+                                    </div>
+                                <div class="invalid-feedback">
+                                    Please select a difficulty level.
+                                </div>
+                            </div>
+                        
+                            <div class="col-12">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" 
+                                    placeholder="Provide a brief description of what this quiz covers..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="topic" class="form-label">Topic *</label>
+                                <input type="text" class="form-control" id="topic" name="topic" required
+                                    placeholder="e.g., Python Programming, World History">
+                                <div class="invalid-feedback">
+                                    Please provide a topic for the quiz.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="time_limit" class="form-label">Time Limit (minutes) *</label>
+                                <input type="number" class="form-control" id="time_limit" name="time_limit" 
+                                    value="30" min="5" max="180" required>
+                                <div class="invalid-feedback">
+                                    Please provide a valid time limit (5-180 minutes).
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-5 pt-4 border-top">
+                            <a href="{% url 'quiz:dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </a>
+                            
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-save me-2"></i>Create Quiz
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+    
+    // Auto-save draft functionality
+    const inputs = form.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            // Save to localStorage as draft
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            localStorage.setItem('quiz_draft', JSON.stringify(data));
+        });
+    });
+    
+    // Load draft on page load
+    const draft = localStorage.getItem('quiz_draft');
+    if (draft) {
+        const data = JSON.parse(draft);
+        Object.keys(data).forEach(key => {
+            const input = form.querySelector(`[name="${key}"]`);
+            if (input) {
+                input.value = data[key];
+            }
+        });
+    }
+    
+    // Clear draft on successful submit
+    form.addEventListener('submit', function() {
+        localStorage.removeItem('quiz_draft');
+    });
+});
+</script>
+{% endblock %}

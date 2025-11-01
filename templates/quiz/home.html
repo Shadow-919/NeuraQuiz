@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}NeuraQuiz - AI-Powered Smart Quiz Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-100 py-5">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <div class="hero-content">
+                    <div class="badge bg-primary mb-4 px-4 py-2">
+                        <i class="fas fa-sparkles me-2"></i>AI-Powered Learning
+                    </div>
+                    <h1 class="display-3 fw-bold mb-4">
+                        Welcome to <span class="text-gradient">NeuraQuiz</span>
+                    </h1>
+                    <p class="lead mb-4 text-muted">
+                        Experience the future of intelligent learning. Create, take, and analyze quizzes powered by advanced AI technology. Transform your learning journey today.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'quiz:dashboard' %}" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                            </a>
+                        {% else %}
+                            <a href="{% url 'quiz:register' %}" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-rocket me-2"></i>Get Started Free
+                            </a>
+                            <a href="{% url 'quiz:login' %}" class="btn btn-outline-primary btn-lg px-5">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-visual text-center position-relative">
+                    <div class="hero-icon-container">
+                        <i class="fas fa-brain hero-main-icon text-gradient"></i>
+                    </div>
+                    <div class="floating-elements">
+                        <div class="floating-card card-1">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Smart Questions</span>
+                        </div>
+                        <div class="floating-card card-2">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </div>
+                        <div class="floating-card card-3">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Powered</span>
+                        </div>
+                        <div class="floating-card card-4">
+                            <i class="fas fa-trophy"></i>
+                            <span>Achievements</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <div class="badge bg-primary mb-3 px-4 py-2">
+                    <i class="fas fa-star me-2"></i>Features
+                </div>
+                <h2 class="display-5 fw-bold mb-3">Why Choose NeuraQuiz?</h2>
+                <p class="lead text-muted">
+                    Experience the next generation of quiz platforms with cutting-edge AI features
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card card h-100 text-center p-4 border-0">
+                    <div class="feature-icon-wrapper mb-4">
+                        <div class="feature-icon bg-gradient-primary text-white">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">AI-Generated Questions</h4>
+                    <p class="text-muted mb-0">
+                        Let our advanced AI create intelligent, diverse questions tailored to your topic and difficulty level with perfect accuracy.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card card h-100 text-center p-4 border-0">
+                    <div class="feature-icon-wrapper mb-4">
+                        <div class="feature-icon text-white" style="background: linear-gradient(135deg, #10B981 0%, #34D399 100%);">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Smart Analytics</h4>
+                    <p class="text-muted mb-0">
+                        Get detailed insights into performance with AI-powered analysis and personalized recommendations for improvement.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card card h-100 text-center p-4 border-0">
+                    <div class="feature-icon-wrapper mb-4">
+                        <div class="feature-icon text-white" style="background: linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Role-Based Access</h4>
+                    <p class="text-muted mb-0">
+                        Perfect for both students and instructors with tailored dashboards and features designed for each role.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5 my-5">
+    <div class="container">
+        <div class="cta-card card border-0 text-center p-5">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto">
+                    <h2 class="display-5 fw-bold mb-3">Ready to Get Started?</h2>
+                    <p class="lead text-muted mb-4">
+                        Join thousands of students and instructors already using NeuraQuiz to enhance their learning experience
+                    </p>
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'quiz:register' %}" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-rocket me-2"></i>Start Your Journey
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-icon-container {
+    position: relative;
+    display: inline-block;
+}
+
+.hero-main-icon {
+    font-size: 12rem;
+    opacity: 0.1;
+    filter: blur(2px);
+}
+
+.floating-elements {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+}
+
+.floating-card {
+    position: absolute;
+    background: white;
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    color: #1F2937;
+    animation: float 3s ease-in-out infinite;
+}
+
+.floating-card i {
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.floating-card.card-1 {
+    top: 10%;
+    left: 5%;
+    animation-delay: 0s;
+}
+
+.floating-card.card-2 {
+    top: 25%;
+    right: 10%;
+    animation-delay: 0.5s;
+}
+
+.floating-card.card-3 {
+    bottom: 30%;
+    left: 10%;
+    animation-delay: 1s;
+}
+
+.floating-card.card-4 {
+    bottom: 15%;
+    right: 5%;
+    animation-delay: 1.5s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.feature-card {
+    transition: all 0.3s ease;
+    border: 1px solid #E5E7EB !important;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+}
+
+.feature-icon-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+}
+
+.cta-card {
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-radius: 24px;
+}
+
+@media (max-width: 768px) {
+    .hero-main-icon {
+        font-size: 6rem;
+    }
+    
+    .floating-card {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .floating-card i {
+        font-size: 1.25rem;
+    }
+}
+</style>
+{% endblock %}

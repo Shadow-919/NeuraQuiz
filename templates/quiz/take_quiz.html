@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ quiz.title }} - NeuraQuiz{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Quiz Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="quiz-header-card card border-0 shadow-md">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div class="flex-grow-1">
+                            <h1 class="h3 fw-bold mb-2">{{ quiz.title }}</h1>
+                            <div class="d-flex flex-wrap gap-3 text-muted small">
+                                <span><i class="fas fa-tag me-1"></i>{{ quiz.topic }}</span>
+                                <span><i class="fas fa-question-circle me-1"></i>{{ questions.count }} questions</span>
+                                <span><i class="fas fa-clock me-1"></i>{{ quiz.time_limit }} minutes</span>
+                                <span class="badge badge-difficulty-{{ quiz.difficulty|lower }}">{{ quiz.difficulty|title }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="quiz-timer-display">
+                                <i class="fas fa-clock me-2"></i>
+                                <span id="quiz-timer" data-time-left="{{ quiz.total_time_seconds }}" data-total-time="{{ quiz.total_time_seconds }}" class="fw-bold">
+                                    {{ quiz.time_limit|floatformat:0 }}:00
+                                </span>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="exit-quiz-btn">
+                                <i class="fas fa-sign-out-alt me-1"></i>Exit
+                            </button>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 6px;">
+                        <div id="timer-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-semibold small">Progress</span>
+                        <span id="answered-count" class="text-muted small">0/{{ questions.count }}</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div id="quiz-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Container -->
+    <div id="quiz-container" class="row" data-attempt-id="{{ attempt.id }}">
+        <div class="col-12">
+            <form id="quiz-form">
+                {% csrf_token %}
+                
+                {% for question in questions %}
+                <div class="question-container card border-0 shadow-md mb-4 {% if not forloop.first %}hidden-by-default{% endif %}" data-question-id="{{ question.id }}" data-question-type="{{ question.question_type }}">
+                    <div class="card-body p-4">
+                        <div class="question-header d-flex justify-content-between align-items-start mb-4">
+                            <h3 class="h5 fw-bold mb-0">
+                                <span class="badge bg-primary me-2">{{ forloop.counter }}</span>
+                                Question {{ forloop.counter }}
+                            </h3>
+                            <span class="badge" style="background: linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%);">
+                                {{ question.question_type|title }}
+                            </span>
+                        </div>
+                        
+                        <div class="question-content">
+                            <p class="question-text mb-4 lead">{{ question.text }}</p>
+                            
+                            {% if question.image_url %}
+                                <div class="question-image mb-4">
+                                    <img src="{{ question.image_url }}" alt="Question image" class="img-fluid rounded shadow-sm">
+                                </div>
+                            {% endif %}
+                            
+                            <div class="question-answers">
+                                {% if question.question_type == 'mcq_single' %}
+                                    {% for choice in question.choices.all %}
+                                    <label class="choice-option mb-3" for="choice_{{ choice.id }}">
+                                        <input class="visually-hidden" type="radio" name="question_{{ question.id }}" 
+                                               id="choice_{{ choice.id }}" value="{{ choice.id }}">
+                                        <div class="choice-content p-3 border rounded">
+                                            {{ choice.choice_text }}
+                                        </div>
+                                    </label>
+                                    {% endfor %}
+                                
+                                {% elif question.question_type == 'mcq_multiple' %}
+                                    {% for choice in question.choices.all %}
+                                    <label class="choice-option mb-3" for="choice_{{ choice.id }}">
+                                        <input class="visually-hidden" type="checkbox" name="question_{{ question.id }}" 
+                                               id="choice_{{ choice.id }}" value="{{ choice.id }}">
+                                        <div class="choice-content p-3 border rounded">
+                                            {{ choice.choice_text }}
+                                        </div>
+                                    </label>
+                                    {% endfor %}
+                                
+                                {% elif question.question_type == 'true_false' %}
+                                    <label class="choice-option mb-3" for="true_{{ question.id }}">
+                                        <input class="visually-hidden" type="radio" name="question_{{ question.id }}" 
+                                               id="true_{{ question.id }}" value="true">
+                                        <div class="choice-content p-3 border rounded">
+                                            <i class="fas fa-check-circle me-2 text-success"></i>True
+                                        </div>
+                                    </label>
+                                    <label class="choice-option mb-3" for="false_{{ question.id }}">
+                                        <input class="visually-hidden" type="radio" name="question_{{ question.id }}" 
+                                               id="false_{{ question.id }}" value="false">
+                                        <div class="choice-content p-3 border rounded">
+                                            <i class="fas fa-times-circle me-2 text-danger"></i>False
+                                        </div>
+                                    </label>
+                                
+                                {% elif question.question_type == 'short_answer' %}
+                                    <div class="mb-3">
+                                        <textarea class="form-control" name="question_{{ question.id }}" 
+                                                  rows="4" placeholder="Type your answer here..."></textarea>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="row">
+        <div class="col-12">
+            <div class="quiz-navigation card border-0 shadow-md">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <button id="prev-question" class="btn btn-outline-secondary" disabled>
+                            <i class="fas fa-arrow-left me-2"></i>Previous
+                        </button>
+                        
+                        <div class="question-indicators d-flex flex-wrap gap-2">
+                            {% for question in questions %}
+                            <button type="button" class="question-indicator {% if forloop.first %}active{% endif %}" data-question-index="{{ forloop.counter0 }}">
+                                {{ forloop.counter }}
+                            </button>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button id="next-question" class="btn btn-primary">
+                                Next <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            <button id="submit-quiz" class="btn btn-success" style="display: none;" data-opens-modal="true" data-bs-toggle="modal" data-bs-target="#submitModal">
+                                <i class="fas fa-check me-2"></i>Submit Quiz
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-strong">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-check-circle me-2 text-success"></i>Submit Quiz
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to submit this quiz?</p>
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    You cannot change your answers after submission.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="confirmSubmit()">
+                    <i class="fas fa-check me-2"></i>Submit Quiz
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Exit Quiz Confirmation Modal -->
+<div class="modal fade" id="exitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-strong">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-sign-out-alt me-2 text-warning"></i>Exit Quiz
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to exit the quiz? Your progress will be saved.</p>
+                <div class="alert alert-warning mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    You can resume the quiz later from your dashboard.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="window.location.href='/dashboard/'">
+                    <i class="fas fa-sign-out-alt me-2"></i>Exit Quiz
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.quiz-header-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.quiz-timer-display {
+    font-size: 1.25rem;
+    color: var(--primary-color);
+}
+
+.choice-option {
+    display: block;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.choice-content {
+    transition: all 0.2s ease;
+    background: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.choice-option:hover .choice-content {
+    background: var(--gray-50);
+    border-color: var(--primary-color) !important;
+    transform: translateY(-2px);
+}
+
+.choice-option input:checked + .choice-content {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+    border-color: var(--primary-color) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .question-indicators {
+        justify-content: center;
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Quiz JS is handled by static/js/main.js; no inline duplicate script here -->
+{% endblock %}

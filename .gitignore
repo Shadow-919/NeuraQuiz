@@ -1,0 +1,9 @@
+# Database
+db.sqlite3
+
+# Environment variables
+.env
+
+# text files
+Superuser_Details.txt
+Gemini_API_Key_NeuraQuiz.txt

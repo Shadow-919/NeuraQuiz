@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Question - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-strong">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h4 class="mb-0 fw-bold">
+                        <i class="fas fa-edit me-2"></i>Edit Question for {{ quiz.title }}
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label">Question Text *</label>
+                            <textarea name="text" class="form-control" rows="3" required>{{ question.text }}</textarea>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Question Type</label>
+                                <select name="question_type" class="form-select">
+                                    <option value="mcq_single" {% if question.question_type == 'mcq_single' %}selected{% endif %}>MCQ (Single Choice)</option>
+                                    <option value="mcq_multiple" {% if question.question_type == 'mcq_multiple' %}selected{% endif %}>MCQ (Multiple Choice)</option>
+                                    <option value="true_false" {% if question.question_type == 'true_false' %}selected{% endif %}>True / False</option>
+                                    <option value="short_answer" {% if question.question_type == 'short_answer' %}selected{% endif %}>Short Answer</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Difficulty Score (1-5)</label>
+                                <input type="number" name="difficulty_score" min="1" max="5" step="1" class="form-control" value="{{ question.difficulty_score|floatformat:0 }}">
+                            </div>
+                        </div>
+
+                        <div id="mcq-choices" class="mb-4">
+                            <label class="form-label fw-bold">Choices (for MCQ)</label>
+                            <p class="text-muted small mb-3">Select the correct choice using radio buttons. For multiple-correct MCQs, switch to "MCQ (Multiple Choice)" type.</p>
+                            
+                            <div class="mb-3 choice-row">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="correct_choice" value="0" class="form-check-input" {% if 0 in correct_indices %}checked{% endif %}>
+                                    {% if question.question_type == 'mcq_multiple' %}
+                                        <input type="checkbox" name="correct_choices" value="0" class="form-check-input" {% if 0 in correct_indices %}checked{% endif %}>
+                                    {% endif %}
+                                    <input type="text" name="choice_0" class="form-control choice-text" placeholder="Choice 1" value="{% if choices|length > 0 %}{{ choices.0.choice_text }}{% endif %}">
+                                </div>
+                            </div>
+                            <div class="mb-3 choice-row">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="correct_choice" value="1" class="form-check-input" {% if 1 in correct_indices %}checked{% endif %}>
+                                    {% if question.question_type == 'mcq_multiple' %}
+                                        <input type="checkbox" name="correct_choices" value="1" class="form-check-input" {% if 1 in correct_indices %}checked{% endif %}>
+                                    {% endif %}
+                                    <input type="text" name="choice_1" class="form-control choice-text" placeholder="Choice 2" value="{% if choices|length > 1 %}{{ choices.1.choice_text }}{% endif %}">
+                                </div>
+                            </div>
+                            <div class="mb-3 choice-row">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="correct_choice" value="2" class="form-check-input" {% if 2 in correct_indices %}checked{% endif %}>
+                                    {% if question.question_type == 'mcq_multiple' %}
+                                        <input type="checkbox" name="correct_choices" value="2" class="form-check-input" {% if 2 in correct_indices %}checked{% endif %}>
+                                    {% endif %}
+                                    <input type="text" name="choice_2" class="form-control choice-text" placeholder="Choice 3" value="{% if choices|length > 2 %}{{ choices.2.choice_text }}{% endif %}">
+                                </div>
+                            </div>
+                            <div class="mb-3 choice-row">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="correct_choice" value="3" class="form-check-input" {% if 3 in correct_indices %}checked{% endif %}>
+                                    {% if question.question_type == 'mcq_multiple' %}
+                                        <input type="checkbox" name="correct_choices" value="3" class="form-check-input" {% if 3 in correct_indices %}checked{% endif %}>
+                                    {% endif %}
+                                    <input type="text" name="choice_3" class="form-control choice-text" placeholder="Choice 4" value="{% if choices|length > 3 %}{{ choices.3.choice_text }}{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Explanation (optional)</label>
+                            <textarea name="explanation" class="form-control" rows="2">{{ question.explanation }}</textarea>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end pt-3 border-top">
+                            <a class="btn btn-outline-secondary" href="{% url 'quiz:edit_quiz' quiz.id %}">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button class="btn btn-primary px-4" type="submit">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const qType = document.querySelector('select[name="question_type"]');
+    const toggleCheckboxes = (val) => {
+        document.querySelectorAll('#mcq-choices .form-check-input[type="checkbox"]').forEach(cb => {
+            if (val === 'mcq_multiple') cb.classList.remove('d-none'); else cb.classList.add('d-none');
+        });
+    };
+    if (qType) {
+        toggleCheckboxes(qType.value);
+        qType.addEventListener('change', (e) => toggleCheckboxes(e.target.value));
+    }
+
+    const highlight = (input) => {
+        const row = input.closest('.choice-row');
+        const text = row.querySelector('.choice-text');
+        if (!text) return;
+        if (input.checked) text.classList.add('is-correct'); else text.classList.remove('is-correct');
+    };
+
+    document.querySelectorAll('#mcq-choices input[type="radio"]').forEach(r => {
+        r.addEventListener('change', (e) => {
+            // clear all highlights
+            document.querySelectorAll('.choice-text').forEach(t => t.classList.remove('is-correct'));
+            highlight(e.target);
+        });
+    });
+
+    document.querySelectorAll('#mcq-choices input[type="checkbox"]').forEach(cb => cb.addEventListener('change', (e)=> highlight(e.target)));
+});
+</script>
+{% endblock %}

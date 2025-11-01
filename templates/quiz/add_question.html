@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Question - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-strong">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h4 class="mb-0 fw-bold">
+                        <i class="fas fa-plus-circle me-2"></i>Add Question to {{ quiz.title }}
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label">Question Text *</label>
+                            <textarea name="text" class="form-control" rows="3" placeholder="Enter your question here..." required></textarea>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Question Type</label>
+                                    <div class="position-relative">
+                                        <select name="question_type" class="form-select question-type-select" style="cursor:pointer;">
+                                            <option value="mcq_single">MCQ (Single Choice)</option>
+                                            <option value="mcq_multiple">MCQ (Multiple Choice)</option>
+                                            <option value="true_false">True / False</option>
+                                            <option value="short_answer">Short Answer</option>
+                                        </select>
+                                        <span class="fa fa-chevron-down position-absolute end-0 top-50 translate-middle-y pe-3 text-muted pointer-events-none"></span>
+                                    </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Difficulty Score (1-5)</label>
+                                <input type="number" name="difficulty_score" min="1" max="5" step="1" class="form-control" value="3">
+                            </div>
+                        </div>
+
+                        <div id="mcq-choices" class="mb-4">
+                            <label class="form-label fw-bold">Choices (for MCQ)</label>
+                            <p class="text-muted small mb-3">Select the correct choice using radio buttons. For multiple-correct MCQs, switch to "MCQ (Multiple Choice)" type.</p>
+                            
+                            <div class="mb-3 choice-row">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="correct_choice" value="0" class="form-check-input" checked>
+                                    <input type="checkbox" name="correct_choices" value="0" class="form-check-input d-none">
+                                    <input type="text" name="choice_0" class="form-control choice-text" placeholder="Choice 1">
+                                </div>
+                            </div>
+                            <div class="mb-3 choice-row">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="correct_choice" value="1" class="form-check-input">
+                                    <input type="checkbox" name="correct_choices" value="1" class="form-check-input d-none">
+                                    <input type="text" name="choice_1" class="form-control choice-text" placeholder="Choice 2">
+                                </div>
+                            </div>
+                            <div class="mb-3 choice-row">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="correct_choice" value="2" class="form-check-input">
+                                    <input type="checkbox" name="correct_choices" value="2" class="form-check-input d-none">
+                                    <input type="text" name="choice_2" class="form-control choice-text" placeholder="Choice 3">
+                                </div>
+                            </div>
+                            <div class="mb-3 choice-row">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="correct_choice" value="3" class="form-check-input">
+                                    <input type="checkbox" name="correct_choices" value="3" class="form-check-input d-none">
+                                    <input type="text" name="choice_3" class="form-control choice-text" placeholder="Choice 4">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Explanation (optional)</label>
+                            <textarea name="explanation" class="form-control" rows="2" placeholder="Provide an explanation for the correct answer..."></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end pt-3 border-top">
+                            <a class="btn btn-outline-secondary" href="{% url 'quiz:edit_quiz' quiz.id %}">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button class="btn btn-primary px-4" type="submit">
+                                <i class="fas fa-check me-2"></i>Add Question
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const qType = document.querySelector('select[name="question_type"]');
+
+    function updateChoiceInputs(val) {
+        // Show radio for single, checkbox for multiple, hide others
+        document.querySelectorAll('.choice-row').forEach((row, idx) => {
+            const radio = row.querySelector('input[type="radio"]');
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (val === 'mcq_single') {
+                radio.classList.remove('d-none');
+                radio.required = true;
+                checkbox.classList.add('d-none');
+                checkbox.required = false;
+            } else if (val === 'mcq_multiple') {
+                radio.classList.add('d-none');
+                radio.required = false;
+                checkbox.classList.remove('d-none');
+                checkbox.required = false;
+            } else {
+                radio.classList.add('d-none');
+                radio.required = false;
+                checkbox.classList.add('d-none');
+                checkbox.required = false;
+            }
+        });
+    }
+    if (qType) {
+        updateChoiceInputs(qType.value);
+        qType.addEventListener('change', (e) => updateChoiceInputs(e.target.value));
+    }
+
+    // Highlight choice text when selected as correct
+    const highlight = (input) => {
+        const row = input.closest('.choice-row');
+        const text = row.querySelector('.choice-text');
+        if (!text) return;
+        if (input.checked) {
+            text.classList.add('is-correct');
+        } else {
+            text.classList.remove('is-correct');
+        }
+    };
+
+    document.querySelectorAll('.choice-row input[type="radio"]').forEach(r => {
+        r.addEventListener('change', (e) => {
+            // clear all highlights
+            document.querySelectorAll('.choice-text').forEach(t => t.classList.remove('is-correct'));
+            highlight(e.target);
+        });
+    });
+    document.querySelectorAll('.choice-row input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', (e) => highlight(e.target));
+    });
+});
+</script>
+{% endblock %}
