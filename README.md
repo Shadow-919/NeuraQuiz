@@ -1,7 +1,6 @@
 # 🧠 NeuraQuiz — AI-Powered Quiz Generator
 
-**NeuraQuiz** is an interactive AI-driven quiz platform that generates smart, topic-based questions using **Google Gemini AI**.  
-Built with **Django**, powered by **Python**, and served on the cloud with **Render** and **Aiven PostgreSQL**, it offers a fast, reliable, and modern learning experience.
+**NeuraQuiz** is an interactive AI-driven quiz platform that generates smart, topic-based questions using **Google Gemini AI**. Built with **Django**, powered by **Python**, and served on the cloud with **Render** and **Aiven PostgreSQL**, it offers a fast, reliable, and modern learning experience.
 
 🔗 **Live Website:** [Link](https://neuraquiz-xjml.onrender.com)
 
@@ -9,7 +8,7 @@ Built with **Django**, powered by **Python**, and served on the cloud with **Ren
 
 ## ✨ Key Features
 
-**AI Question Generation:** Dynamically creates unique quiz questions using Gemini AI.  
+- **AI Question Generation:** Dynamically creates unique quiz questions using Gemini AI.  
 **Multiple Difficulty Levels:** Choose from beginner to expert quizzes.  
 **Persistent Database:** Cloud PostgreSQL hosted on Aiven (free & permanent).  
 **User Management:** Secure login, admin panel, and quiz progress tracking.  
