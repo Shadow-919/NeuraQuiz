@@ -84,15 +84,21 @@ WSGI_APPLICATION = 'neuraquiz.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# DATABASES: local fallback to sqlite, production uses DATABASE_URL (Render)
-DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-        ssl_require=False,  # set True if your DB requires SSL
-    )
-}
+if DATABASE_URL:
+    # Use Aiven PostgreSQL when DATABASE_URL is set (Render or local .env test)
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+    }
+else:
+    # Fallback to local SQLite (for development)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 
