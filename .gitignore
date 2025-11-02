@@ -10,6 +10,10 @@ Superuser_Details.txt
 Gemini_API_Key_NeuraQuiz.txt
 User_credentials.txt
 
+# data files
+data.json
+
 #pycache
 __pycache__/
 *.pycquiz/management/commands/createsu.py
+quiz/management/__pycache__/
