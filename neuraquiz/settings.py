@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-
+import dj_database_url
 import os
 
 # Load environment variables
@@ -85,12 +85,15 @@ WSGI_APPLICATION = 'neuraquiz.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES: local fallback to sqlite, production uses DATABASE_URL (Render)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        ssl_require=False,  # set True if your DB requires SSL
+    )
 }
+
 
 
 # Password validation
