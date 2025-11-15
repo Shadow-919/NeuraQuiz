@@ -76,7 +76,7 @@
     <!-- My Quizzes Section -->
     <div class="row mb-5">
         <div class="col-12">
-            <div class="section-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div class="section-header d-flex align-items-center mb-4 flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3 flex-wrap">
                     <h2 class="fw-bold mb-0">
                         <i class="fas fa-folder-open me-2 text-primary"></i>My Quizzes
@@ -88,10 +88,10 @@
                         </span>
                     </div>
                     {% endif %}
+                    <a href="{% url 'quiz:create_quiz' %}" class="btn btn-primary w-100 w-md-auto create-quiz-btn">
+                        <i class="fas fa-plus me-2"></i>Create Quiz
+                    </a>
                 </div>
-                <a href="{% url 'quiz:create_quiz' %}" class="btn btn-primary w-100 w-md-auto create-quiz-btn">
-                    <i class="fas fa-plus me-2"></i>Create Quiz
-                </a>
             </div>
             
             {% if quizzes %}
@@ -359,7 +359,12 @@ document.getElementById('deleteQuizForm').addEventListener('submit', function(e)
         max-width: fit-content !important;
         flex-shrink: 0 !important;
         flex-grow: 0 !important;
-        align-self: flex-start;
+        margin-left: 0 !important;
+    }
+    
+    /* On desktop, ensure the button appears right after access code */
+    .section-header > .d-flex {
+        flex-wrap: nowrap;
     }
 }
 
@@ -368,6 +373,12 @@ document.getElementById('deleteQuizForm').addEventListener('submit', function(e)
     .create-quiz-btn {
         width: 100% !important;
         padding: 0.75rem 1.5rem;
+        margin-left: 0 !important;
+    }
+    
+    /* On mobile, allow wrapping */
+    .section-header > .d-flex {
+        flex-wrap: wrap;
     }
 }
 </style>
