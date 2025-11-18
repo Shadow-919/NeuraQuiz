@@ -227,8 +227,8 @@
                             <label for="ai-num-questions" class="form-label">Number of Questions</label>
                             <div class="position-relative">
                                 <select class="form-select ai-num-questions-select" id="ai-num-questions" required style="cursor:pointer;">
-                                    <option value="5">5 Questions</option>
-                                    <option value="10" selected>10 Questions</option>
+                                    <option value="5" selected>5 Questions</option>
+                                    <option value="10">10 Questions</option>
                                     <option value="15">15 Questions</option>
                                     <option value="20">20 Questions</option>
                                 </select>
@@ -321,11 +321,11 @@ function editQuestion(questionId) {
 }
 
 // Initialize AI generator
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof window.aiGenerator !== 'undefined') {
-        window.aiGenerator.init();
-    }
-});
+// document.addEventListener('DOMContentLoaded', function() {
+//     if (typeof window.aiGenerator !== 'undefined') {
+//         window.aiGenerator.init();
+//     }
+// });
 
 function showDeleteQuestionModal(questionId, questionNumber) {
     // Populate modal content

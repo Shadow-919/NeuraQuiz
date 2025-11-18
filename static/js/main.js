@@ -178,6 +178,10 @@ class AIGenerator {
     }
 
     init() {
+        // Force default num questions = 5
+        const numDropdown = document.getElementById('ai-num-questions');
+        if (numDropdown) numDropdown.value = "5";
+
         this.generateButton = document.getElementById('generate-ai-questions');
         this.loadingElement = document.getElementById('ai-loading');
         this.modalElement = document.getElementById('aiModal');
@@ -222,6 +226,11 @@ class AIGenerator {
     }
 
     async handleModalClose() {
+        // STOP polling immediately when modal closes
+        if (this._statusPoll) {
+            clearInterval(this._statusPoll);
+            this._statusPoll = null;
+        }
         // Send cancellation request to backend
         if (this.isGenerating || this._state === 'generating' || this._state === 'pending') {
             const quizId = this.generateButton?.dataset?.quizId;
@@ -341,10 +350,12 @@ class AIGenerator {
                     this.generateButton.innerHTML = '<i class="fas fa-robot me-2"></i>Generate Questions';
                 }
                 this.generateButton.disabled = false;
-                try {
-                    this.handleGenerate(null);
-                } catch (e) {
-                    console.error('Retry generate failed', e);
+                if (!this.isGenerating) {
+                    try {
+                        this.handleGenerate(null);
+                    } catch (e) {
+                        console.error('Retry generate failed', e);
+                    }
                 }
             } else {
                 this.generateButton.innerHTML = `Retrying in ${remaining}s...`;
@@ -353,7 +364,16 @@ class AIGenerator {
     }
 
     async handleGenerate(event) {
+
         if (event && event.preventDefault) event.preventDefault();
+
+        // Prevent duplicate triggers (MAIN FIX)
+        if (this.isGenerating) {
+            console.warn("Duplicate generate click blocked.");
+            return;
+        }
+        this.isGenerating = true;
+
 
         try {
             this._state = 'generating';
@@ -371,10 +391,8 @@ class AIGenerator {
 
         try {
             this.currentAbortController = new AbortController();
-            this.isGenerating = true;
         } catch (e) {
             this.currentAbortController = null;
-            this.isGenerating = false;
         }
 
         let response = null;

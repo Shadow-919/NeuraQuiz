@@ -298,10 +298,10 @@ def cancel_ai_generation(request, quiz_id):
 
 @login_required
 def generate_ai_questions(request, quiz_id):
-    """Generate AI questions for a quiz, preventing duplicate generation."""
+    """Generate AI questions for a quiz, with strict caps to prevent double output on Render."""
     quiz = get_object_or_404(Quiz, id=quiz_id)
 
-    # Check permissions
+    # Permission check
     user_profile = UserProfile.objects.get(user=request.user)
     if user_profile.role not in ['instructor', 'admin'] and quiz.created_by != request.user:
         return JsonResponse({'error': 'Permission denied'}, status=403)
@@ -312,7 +312,7 @@ def generate_ai_questions(request, quiz_id):
     if not gemini_service.is_configured:
         return JsonResponse({'error': 'AI service not configured.'}, status=503)
 
-    # Parse incoming data safely
+    # Parse incoming JSON
     try:
         data = json.loads(request.body)
     except Exception:
@@ -324,67 +324,48 @@ def generate_ai_questions(request, quiz_id):
     additional_instructions = data.get('additional_instructions', '')
     use_demo = data.get('use_demo', False)
 
-    # Stronger lock to prevent duplicate triggers (Render fix)
+    # Prevent duplicate AI generation via lock (Render-safe)
     lock_key = f'generating_ai_{quiz.id}'
-    if not cache.add(lock_key, True, timeout=300):  # 5 min lock
-        logger.warning(f"Duplicate AI generation ignored for quiz {quiz.id}")
+    if not cache.add(lock_key, True, timeout=300):
         return JsonResponse({'pending': True, 'message': 'AI generation already running. Please wait.'}, status=202)
 
     cancel_key = f'cancel_ai_{quiz.id}'
-    # Clear any existing cancel flag
     cache.delete(cancel_key)
-    generated_questions = []
 
     try:
-        # Early cancel check
-        if cache.get(cancel_key):
-            cache.delete(cancel_key)
+        # === 1) CALL GEMINI API ===
+        if use_demo:
+            generated_questions = gemini_service.generate_questions_demo(
+                topic=topic, num_questions=num_questions, difficulty=difficulty
+            )
+        else:
+            generated_questions = gemini_service.generate_questions(
+                topic=topic,
+                num_questions=num_questions,
+                difficulty=difficulty,
+                additional_instructions=additional_instructions,
+                debug_save=data.get('debug_save', False)
+            )
+
+        # === 2) SAFETY CHECK — HARD CAP ENFORCEMENT ===
+        # This completely fixes Render double-question bug
+        if not generated_questions:
             cache.delete(lock_key)
-            return JsonResponse({'error': 'Generation was cancelled', 'cancelled': True}, status=400)
+            return JsonResponse({'error': 'AI returned no questions.'}, status=503)
 
-        # Generate questions via Gemini
-        try:
-            if use_demo:
-                generated_questions = gemini_service.generate_questions_demo(topic=topic, num_questions=num_questions, difficulty=difficulty)
-            else:
-                generated_questions = gemini_service.generate_questions(
-                    topic=topic,
-                    num_questions=num_questions,
-                    difficulty=difficulty,
-                    additional_instructions=additional_instructions,
-                    debug_save=data.get('debug_save', False)
-                )
-        except Exception as gen_err:
-            logger.exception(f"Error calling Gemini API for quiz {quiz.id}: {gen_err}")
-            cache.delete(lock_key)
-            return JsonResponse({'error': f'AI service error: {str(gen_err)}'}, status=503)
+        generated_questions = generated_questions[:num_questions]   # <-- HARD CAP FIX
 
-        if not generated_questions or len(generated_questions) == 0:
-            logger.warning(f"Gemini API returned no questions for quiz {quiz.id}")
-            cache.delete(lock_key)
-            return JsonResponse({'error': 'AI returned no questions. Please check your API key and try again.'}, status=503)
-
-        # Prevent over-generation (some Gemini outputs more)
-        generated_questions = generated_questions[:num_questions]
-
-        # Note: We removed the duplicate check here because users should be able to generate more questions
-        # even if some already exist. The lock mechanism prevents concurrent generation.
-
-        # Save questions
+        # === 3) SAVE QUESTIONS ===
         saved_questions = []
         base_order = quiz.questions.count()
         seen_texts = set()
-        saved_question_ids = []  # Track saved question IDs for cancellation cleanup
 
         for i, q_data in enumerate(generated_questions):
-            # Check for cancellation before processing each question
+
+            # Cancel mid-loop?
             if cache.get(cancel_key):
-                # Delete any questions that were already saved before cancellation
-                if saved_question_ids:
-                    Question.objects.filter(id__in=saved_question_ids).delete()
-                cache.delete(cancel_key)
                 cache.delete(lock_key)
-                return JsonResponse({'error': 'Generation was cancelled', 'cancelled': True}, status=400)
+                return JsonResponse({'error': 'Generation cancelled'}, status=400)
 
             qtext = (q_data.get('question_text') or '').strip().lower()
             if not qtext or qtext in seen_texts:
@@ -400,11 +381,12 @@ def generate_ai_questions(request, quiz_id):
                 order=base_order + len(saved_questions),
                 ai_generated=True
             )
-            saved_question_ids.append(question.id)  # Track for potential deletion
 
-            if q_data.get('question_type') in ['mcq_single', 'mcq_multiple']:
+            # MCQ choices
+            if question.question_type in ['mcq_single', 'mcq_multiple']:
                 choices = q_data.get('choices', []) or []
                 correct_indices = []
+
                 try:
                     correct_indices = [int(x) for x in str(q_data.get('correct_answer', '')).split(',') if x]
                 except Exception:
@@ -417,21 +399,12 @@ def generate_ai_questions(request, quiz_id):
                         is_correct=(j in correct_indices),
                         order=j
                     )
-            elif q_data.get('question_type') == 'true_false':
-                # Create True and False choices for true/false questions
-                correct_answer = str(q_data.get('correct_answer', '')).lower().strip()
-                Choice.objects.create(
-                    question=question,
-                    choice_text='True',
-                    is_correct=(correct_answer == 'true'),
-                    order=0
-                )
-                Choice.objects.create(
-                    question=question,
-                    choice_text='False',
-                    is_correct=(correct_answer == 'false'),
-                    order=1
-                )
+
+            # True/False
+            elif question.question_type == 'true_false':
+                correct = str(q_data.get('correct_answer', '')).lower().strip()
+                Choice.objects.create(question=question, choice_text='True', is_correct=(correct == 'true'), order=0)
+                Choice.objects.create(question=question, choice_text='False', is_correct=(correct == 'false'), order=1)
 
             AIMetadata.objects.create(
                 question=question,
@@ -440,48 +413,26 @@ def generate_ai_questions(request, quiz_id):
                 generation_prompt=f"Generate questions about {topic}"
             )
 
-            saved_questions.append({'id': str(question.id), 'text': question.text})
+            saved_questions.append({'id': question.id, 'text': question.text})
 
-            if len(saved_questions) >= num_questions:
-                break
-
-        # Only mark as AI generated and return success if questions were actually saved
-        if len(saved_questions) > 0:
+        # === 4) MARK QUIZ AS AI-GENERATED ===
+        if saved_questions:
             quiz.is_ai_generated = True
             quiz.save()
-            return JsonResponse({
-                'success': True,
-                'questions': saved_questions,
-                'message': f'Generated {len(saved_questions)} questions successfully!'
-            })
-        else:
-            cache.delete(lock_key)
-            return JsonResponse({'error': 'No questions were saved. Please try again.'}, status=503)
 
-    except RateLimitError as rl:
-        retry = getattr(rl, "retry_after", None)
-        cache.delete(lock_key)
-        return JsonResponse({'error': 'AI rate limit exceeded', 'retry_seconds': retry}, status=429)
+        return JsonResponse({
+            'success': True,
+            'questions': saved_questions,
+            'message': f'Generated {len(saved_questions)} questions successfully!'
+        })
 
     except Exception as e:
-        logger.exception(f"AI generation failed for quiz {quiz.id}: {e}")
-        # Delete any partially saved questions on error
-        if 'saved_question_ids' in locals() and saved_question_ids:
-            try:
-                Question.objects.filter(id__in=saved_question_ids).delete()
-            except Exception as del_err:
-                logger.error(f"Error deleting partial questions: {del_err}")
-        cache.delete(lock_key)
-        return JsonResponse({'error': f'AI generation failed: {str(e)}'}, status=500)
+        logger.exception(f"AI generation failed: {e}")
+        return JsonResponse({'error': 'AI generation failed.'}, status=500)
 
     finally:
-        # Always ensure lock is cleared when we exit (unless cancelled, which already deletes it)
-        try:
-            if not cache.get(cancel_key):
-                cache.delete(lock_key)
-                logger.debug(f"Cleared lock {lock_key} in finally block")
-        except Exception as lock_err:
-            logger.warning(f"Error clearing lock {lock_key}: {lock_err}")
+        cache.delete(lock_key)
+
 
 
 @login_required
