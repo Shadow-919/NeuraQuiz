@@ -72,30 +72,42 @@ questions = parse_questions(response.text)
 ### 🖥️ Landing Page
 
 <p align="center">
-  <img src="assets/L1.JPG" width="80%" />
-  <img src="assets/L2.JPG" width="80%" />
-  <img src="assets/L3.JPG" width="80%" />
-  <img src="assets/L4.JPG" width="80%" />
+  <img src="assets/Home_page/H1.HPG" width="80%" />
+  <img src="assets/Home_page/H2.HPG" width="80%" />
+  <img src="assets/Home_page/H3.HPG" width="80%" />
 </p>
 
-### 🧾 Caption Generation Page
+### Register & Login Page
 
 <p align="center">
-  <img src="assets/C1.JPG" width="80%" />
+  <img src="assets/Login_Register/Register.JPG" width="80%" />
+  <img src="assets/Login_Register/Login.JPG" width="80%" />
 </p>
 
 ---
 
-## 🖼️ Caption Outputs (Sample Results)
+## Instructor
+
+<p align="center">
+  <img src="assets/Professor/prof_dashboard.JPG" width="80%" />
+</p>
+
+---
+
+## Student
 
 <table align="center">
   <tr>
-    <td><img src="assets/O1.JPG" width="100%"></td>
-    <td><img src="assets/O2.JPG" width="100%"></td>
+    <td><img src="assets/Student/stu_dash1.JPG" width="100%"></td>
+    <td><img src="assets/Student/stu_dash2.JPG" width="100%"></td>
   </tr>
   <tr>
-    <td><img src="assets/O3.JPG" width="100%"></td>
-    <td><img src="assets/O4.JPG" width="100%"></td>
+    <td><img src="assets/Student/Quiz_completion.JPG" width="100%"></td>
+    <td><img src="assets/Student/Quiz_completion_2.JPG" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/Student/q1.JPG" width="100%"></td>
+    <td><img src="assets/Student/final_student_dashboard.JPG" width="100%"></td>
   </tr>
 </table>
 
