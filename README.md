@@ -90,6 +90,8 @@ questions = parse_questions(response.text)
 
 <p align="center">
   <img src="assets/Professor/prof_dashboard.JPG" width="80%" />
+  <img src="assets/Professor/quiz_dash.JPG" width="80%" />
+  <img src="assets/Professor/gen_ai_ques.JPG" width="80%" />
 </p>
 
 ---
