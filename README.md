@@ -2,7 +2,7 @@
 
 **NeuraQuiz** is an interactive AI-driven quiz platform that generates smart, topic-based questions using **LLM(Google Gemini AI)**. Built with **Django**, powered by **Python**, and served on the cloud with **Render** and **Aiven PostgreSQL**, it offers a fast, reliable, and modern learning experience.
 
-🔗 **Live Website:** [Link](https://neuraquiz-xjml.onrender.com)
+## 🔗 **Live Website:** [Link](https://neuraquiz-xjml.onrender.com)
 
 ---
 
@@ -131,6 +131,13 @@ This project is released under the **MIT License** you are free to use, modify, 
 - [Google Gemini API](https://ai.google.dev/)
 - [Aiven PostgreSQL](https://aiven.io/)
 - [Render Hosting](https://render.com/)
+
+---
+
+## 🚫 Note
+
+> This project is shared for **demonstration purposes only**.  
+> Setup instructions are intentionally excluded.
 
 ---
 
