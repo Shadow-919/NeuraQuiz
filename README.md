@@ -116,7 +116,7 @@ questions = parse_questions(response.text)
 ---
 
 ## 🧾 License
-This project is released under the **MIT License** you are free to use, modify, and distribute it.
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
