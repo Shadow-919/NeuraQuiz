@@ -406,12 +406,12 @@ def generate_ai_questions(request, quiz_id):
                 Choice.objects.create(question=question, choice_text='True', is_correct=(correct == 'true'), order=0)
                 Choice.objects.create(question=question, choice_text='False', is_correct=(correct == 'false'), order=1)
 
-            AIMetadata.objects.create(
-                question=question,
-                temperature_used=0.7,
-                repetition_penalty=1.1,
-                generation_prompt=f"Generate questions about {topic}"
-            )
+            # AIMetadata.objects.create(
+            #     question=question,
+            #     temperature_used=0.7,
+            #     repetition_penalty=1.1,
+            #     generation_prompt=f"Generate questions about {topic}"
+            # )
 
             saved_questions.append({'id': question.id, 'text': question.text})
 

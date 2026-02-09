@@ -161,3 +161,5 @@ GEMINI_MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', '')
 
 # Email Configuration (for development)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
