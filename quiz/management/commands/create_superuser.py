@@ -11,9 +11,9 @@ class Command(BaseCommand):
     help = 'Create the default superuser if it does not exist'
 
     def handle(self, *args, **options):
-        username = 'username'
-        email = 'emailid'
-        password = 'password'
+        username = 'Shadow'
+        email = 'test46ge8g4@gmail.com'
+        password = 'SAFjashfh1564.?.'
         
         # Check if user already exists
         if User.objects.filter(username=username).exists():
